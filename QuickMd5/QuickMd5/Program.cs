@@ -51,7 +51,7 @@ namespace QuickMd5
 
                         var newhash = Hash.GetMd5Hash(actualFile);
 
-                        if (fields[0] == newhash)
+                        if (string.Equals(fields[0], newhash, StringComparison.OrdinalIgnoreCase))
                         {
                             Console.ForegroundColor = ConsoleColor.Green;
                             Console.Write("*MATCH*");
