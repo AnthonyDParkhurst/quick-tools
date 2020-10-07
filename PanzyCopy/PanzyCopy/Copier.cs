@@ -162,39 +162,62 @@ namespace PanzyCopy
                 Console.WriteLine();
                 Log($"Copying {Path.GetFileName(file)}");
 
-                using (var instream = File.OpenRead(file))
-                using (var outstream = File.OpenWrite(destFile))
+                using var outstream = File.OpenWrite(destFile);
+
+                var position = 0L;
+
+                while (true)
                 {
-                    Log("File opened, trying to read...");
-
-                    var fileSize = instream.Length;
-
-                    Log($"Input file size: {ShowBytes(fileSize)}");
-
-                    var bufsize = 1024 * 64;
-
-                    var buf = new byte[bufsize];
-
-                    var bytes = 1;
-
-                    var total = 0L;
-
-                    while (bytes > 0)
+                    using (var instream = File.OpenRead(file))
                     {
-                        bytes = instream.Read(buf, 0, bufsize);
+                        Log("File opened...");
 
-                        if (bytes > 0)
+                        var fileSize = instream.Length;
+
+                        Log($"Input file size: {ShowBytes(fileSize)}");
+
+                        if (position != 0)
                         {
-                            outstream.Write(buf, 0, bytes);
-
-                            total += bytes;
-
-                            Console.Write($"\r({Time()}) Copied: {ShowBytes(total)}     "); // can't use Log() here...
+                            Log($"Seeking to position: {ShowBytes(position)}");
+                            instream.Position = position;
                         }
+
+                        var bufsize = 1024 * 64;
+
+                        var buf = new byte[bufsize];
+
+                        var bytes = 1;
+
+                        try
+                        {
+                            while (bytes > 0)
+                            {
+                                bytes = instream.Read(buf, 0, bufsize);
+
+                                if (bytes > 0)
+                                {
+                                    outstream.Write(buf, 0, bytes);
+
+                                    position += bytes;
+
+                                    Console.Write($"\r({Time()}) Copied: {ShowBytes(position)}     "); // can't use Log() here...
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine();
+                            Log(e.Message);
+                            Console.WriteLine();
+                            Console.WriteLine("Retry in 30 seconds...");
+                            Thread.Sleep(TimeSpan.FromSeconds(30));
+                            continue;
+                        }
+
+                        return true;
                     }
                 }
-
-                return true;
             }
             catch (Exception e)
             {
