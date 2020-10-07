@@ -10,7 +10,7 @@ namespace CheckVcDepends
 {
     class Program
     {
-        private const string DumpBin = @"c:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\HostX86\x86\dumpbin";
+        private const string DumpBin = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.26.28801\bin\Hostx86\x86\dumpbin.exe";
 
         private const string IgnoreKey = "-ignore=";
         private const string OutKey = "-out=";
