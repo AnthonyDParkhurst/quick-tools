@@ -271,7 +271,7 @@ namespace PanzyCopy
         {
             var directoryName = Path.GetDirectoryName(files[0]);
 
-            while (!String.IsNullOrEmpty(directoryName))
+            while (!string.IsNullOrEmpty(directoryName))
             {
                 if (Path.GetFileName(directoryName).Any(char.IsDigit))
                 {
@@ -281,7 +281,7 @@ namespace PanzyCopy
                 directoryName = Path.GetDirectoryName(directoryName);
             }
 
-            while (!String.IsNullOrEmpty(directoryName))
+            while (!string.IsNullOrEmpty(directoryName))
             {
                 if (files.All(f => f.StartsWith(directoryName)))
                     return directoryName;
@@ -289,7 +289,17 @@ namespace PanzyCopy
                 directoryName = Path.GetDirectoryName(directoryName);
             }
 
-            throw new Exception("Can't find common folder from list of files...");
+            directoryName = Path.GetDirectoryName(files[0]);
+
+            while (!string.IsNullOrEmpty(directoryName))
+            {
+                if (files.All(f => f.StartsWith(directoryName)))
+                    return directoryName;
+
+                directoryName = Path.GetDirectoryName(directoryName);
+            }
+
+            return @"_MISC_FILES_";
         }
 
         private static string Time()
