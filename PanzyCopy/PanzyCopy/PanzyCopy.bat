@@ -19,6 +19,6 @@ rem -- I use the settings below to get the files I usually want from KTA, TD and
 
 rem -- Of course you can have different versions of this bat file for different file sets you want from Panzura.
 
-dotnet PanzyCopy.dll --dest D:\Cached --get "Kofax*.zip" --get "Kofax*.iso" --get DLInternal.zip --get RepositoryBrowser.ZIP --get TA_lib.ZIP --get Unobfuscated_ThinClient.zip --skip "KofaxTotalAgility*Azure*" --skip "KofaxTotalAgility*IS*" --skip "KofaxTotalAgility*OPMT*" --skip "KofaxTotalAgilityDocumentation*" %*
+dotnet PanzyCopy.dll --dest C:\Cached --get "Kofax*.zip" --get "Kofax*.iso" --get DLInternal.zip --get RepositoryBrowser.ZIP --get TA_lib.ZIP --get Unobfuscated_ThinClient.zip --skip "KofaxTotalAgility*Azure*" --skip "KofaxTotalAgility*IS*" --skip "KofaxTotalAgility*OPMT*" --skip "KofaxTotalAgilityDocumentation*" %*
 
 pause
