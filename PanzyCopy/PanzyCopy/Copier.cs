@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace PanzyCopy
 {
@@ -99,7 +101,7 @@ namespace PanzyCopy
             }
         }
 
-        public void Go()
+        public async Task<int> Go()
         {
             Console.WriteLine($"Destination folder: {_destPath}");
 
@@ -131,12 +133,12 @@ namespace PanzyCopy
 
                 while (!done)
                 {
-                    done = CopyFile(file, Path.Combine(_destPath, fileName));
+                    done = await CopyFile(file, Path.Combine(_destPath, fileName));
 
                     if (!done)
                     {
-                        sleeptime += 60;
-                        sleeptime = Math.Min(sleeptime, 600);
+                        sleeptime += 10;
+                        sleeptime = Math.Min(sleeptime, 60);
                         Log($"Sleeping {sleeptime} seconds...");
                         Thread.Sleep(TimeSpan.FromSeconds(sleeptime));
                     }
@@ -153,9 +155,10 @@ namespace PanzyCopy
             Console.WriteLine();
             Log($"Success (Duration: {endTime - startTime})");
 
+            return 0;
         }
 
-        private static bool CopyFile(string file, string destFile)
+        private static async Task<bool> CopyFile(string file, string destFile)
         {
             try
             {
@@ -190,19 +193,34 @@ namespace PanzyCopy
 
                         try
                         {
+                            var downloadStopwatch = new Stopwatch();
+                            var saveStopWatch = new Stopwatch();
+                            var transferred = 0L;
+                            var startTransfer = DateTime.Now;
+
                             while (bytes > 0)
                             {
-                                bytes = instream.Read(buf, 0, bufsize);
+                                downloadStopwatch.Start();
+                                bytes = await instream.ReadAsync(buf, 0, bufsize);
+                                downloadStopwatch.Stop();
 
                                 if (bytes > 0)
                                 {
-                                    outstream.Write(buf, 0, bytes);
+                                    var elapsed = DateTime.Now - startTransfer;
+                                    transferred += bytes;
+
+                                    saveStopWatch.Start();
+                                    await outstream.WriteAsync(buf, 0, bytes);
+                                    saveStopWatch.Stop();
 
                                     position += bytes;
 
-                                    Console.Write($"\r({Time()}) Copied: {ShowBytes(position)}     "); // can't use Log() here...
-                                }
+                                    Console.Write($"\r({Time()}) Copied: {ShowBytes(position)}  [Rate: {ShowBytes(transferred / elapsed.TotalSeconds)}/s]     "); // can't use Log() here...
+                                };
                             }
+
+                            Console.WriteLine();
+                            Console.WriteLine($"Total download time: {downloadStopwatch.Elapsed}; total write time: {saveStopWatch.Elapsed}");
                         }
                         catch (Exception e)
                         {
@@ -242,9 +260,9 @@ namespace PanzyCopy
         {
             var units = 0;
 
-            while (size >= 1000)
+            while (size >= 1000.0)
             {
-                size /= 1000;
+                size /= 1000.0;
                 units += 1;
             }
 
