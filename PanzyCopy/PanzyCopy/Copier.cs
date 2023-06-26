@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -101,7 +102,7 @@ namespace PanzyCopy
             }
         }
 
-        public async Task<int> Go()
+        public void Go()
         {
             Console.WriteLine($"Destination folder: {_destPath}");
 
@@ -133,7 +134,7 @@ namespace PanzyCopy
 
                 while (!done)
                 {
-                    done = await CopyFile(file, Path.Combine(_destPath, fileName));
+                    done = CopyFile(file, Path.Combine(_destPath, fileName));
 
                     if (!done)
                     {
@@ -155,95 +156,121 @@ namespace PanzyCopy
             Console.WriteLine();
             Log($"Success (Duration: {endTime - startTime})");
 
-            return 0;
         }
 
-        private static async Task<bool> CopyFile(string file, string destFile)
+        private static bool CopyFile(string file, string destFile)
         {
+            using var blockingCollection = new BlockingCollection<byte[]>();
+
             try
             {
                 Console.WriteLine();
                 Log($"Copying {Path.GetFileName(file)}");
 
-                using var outstream = File.OpenWrite(destFile);
+                var outputTask = Task.Run(() => { OutputTask(destFile, blockingCollection); });
 
                 var position = 0L;
 
                 while (true)
                 {
-                    using (var instream = File.OpenRead(file))
+                    using var instream = File.OpenRead(file);
+
+                    Log("File opened...");
+
+                    var fileSize = instream.Length;
+
+                    Log($"Input file size: {ShowBytes(fileSize)}");
+
+                    if (position != 0)
                     {
-                        Log("File opened...");
-
-                        var fileSize = instream.Length;
-
-                        Log($"Input file size: {ShowBytes(fileSize)}");
-
-                        if (position != 0)
-                        {
-                            Log($"Seeking to position: {ShowBytes(position)}");
-                            instream.Position = position;
-                        }
-
-                        var bufsize = 1024 * 64;
-
-                        var buf = new byte[bufsize];
-
-                        var bytes = 1;
-
-                        try
-                        {
-                            var downloadStopwatch = new Stopwatch();
-                            var saveStopWatch = new Stopwatch();
-                            var transferred = 0L;
-                            var startTransfer = DateTime.Now;
-
-                            while (bytes > 0)
-                            {
-                                downloadStopwatch.Start();
-                                bytes = await instream.ReadAsync(buf, 0, bufsize);
-                                downloadStopwatch.Stop();
-
-                                if (bytes > 0)
-                                {
-                                    var elapsed = DateTime.Now - startTransfer;
-                                    transferred += bytes;
-
-                                    saveStopWatch.Start();
-                                    await outstream.WriteAsync(buf, 0, bytes);
-                                    saveStopWatch.Stop();
-
-                                    position += bytes;
-
-                                    Console.Write($"\r({Time()}) Copied: {ShowBytes(position)}  [Rate: {ShowBytes(transferred / elapsed.TotalSeconds)}/s]     "); // can't use Log() here...
-                                };
-                            }
-
-                            Console.WriteLine();
-                            Console.WriteLine($"Total download time: {downloadStopwatch.Elapsed}; total write time: {saveStopWatch.Elapsed}");
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine();
-                            Console.WriteLine();
-                            Log(e.Message);
-                            Console.WriteLine();
-                            Console.WriteLine("Retry in 30 seconds...");
-                            Thread.Sleep(TimeSpan.FromSeconds(30));
-                            continue;
-                        }
-
-                        return true;
+                        Log($"Seeking to position: {ShowBytes(position)}");
+                        instream.Position = position;
                     }
+
+                    var bufsize = 1024 * 64;
+
+                    var buf = new byte[bufsize];
+
+                    var bytes = 1;
+
+                    try
+                    {
+                        var downloadStopwatch = new Stopwatch();
+                        var transferred = 0L;
+                        var startTransfer = DateTime.Now;
+
+                        while (bytes > 0)
+                        {
+                            downloadStopwatch.Start();
+                            bytes = instream.Read(buf, 0, bufsize);
+                            downloadStopwatch.Stop();
+
+                            if (bytes > 0)
+                            {
+                                position += bytes;
+
+                                var elapsed = DateTime.Now - startTransfer;
+                                transferred += bytes;
+
+                                var data = new byte[bytes];
+                                Array.Copy(buf, data, bytes);
+                                blockingCollection.Add(data);
+
+                                Console.Write($"\r({Time()}) Downloaded: {ShowBytes(position)}  [Rate: {ShowBytes(transferred / elapsed.TotalSeconds)}/s]     "); // can't use Log() here...
+                            }
+                        }
+
+                        blockingCollection.CompleteAdding();
+
+                        outputTask.Wait();
+
+                        Console.WriteLine();
+                        Console.WriteLine($"Total download time: {downloadStopwatch.Elapsed}");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine();
+                        Log(e.Message);
+                        Console.WriteLine();
+                        Console.WriteLine("Retry in 30 seconds...");
+                        Thread.Sleep(TimeSpan.FromSeconds(30));
+                        continue;
+                    }
+
+                    return true;
                 }
             }
             catch (Exception e)
             {
+                blockingCollection.CompleteAdding();
+                // need to wait for output task to complete....
                 Console.WriteLine();
                 Console.WriteLine();
                 Log(e.Message);
                 Console.WriteLine();
                 return false;
+            }
+        }
+
+        private static void OutputTask(string destFile, BlockingCollection<byte[]> blockingCollection)
+        {
+            using var outstream = File.OpenWrite(destFile);
+
+            while (!blockingCollection.IsCompleted)
+            {
+                byte[] data = null;
+
+                try
+                {
+                    data = blockingCollection.Take();
+                }
+                catch (InvalidOperationException) { }
+
+                if (data != null)
+                {
+                    outstream.Write(data, 0, data.Length);
+                }
             }
         }
 

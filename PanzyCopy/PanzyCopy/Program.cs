@@ -5,7 +5,7 @@ namespace PanzyCopy
 {
     internal static class Program
     {
-        private static async Task<int> Main(string[] args)
+        private static void Main(string[] args)
         {
             if (args.Length < 1) Usage();
 
@@ -15,7 +15,7 @@ namespace PanzyCopy
 
                 copier.Initialize(args);
 
-                await copier.Go();
+                copier.Go();
 
                 Environment.Exit(0);
             }
@@ -24,8 +24,6 @@ namespace PanzyCopy
                 Console.WriteLine(e.Message);
                 Environment.Exit(1);
             }
-
-            return 0;
         }
 
         private static void Usage()
