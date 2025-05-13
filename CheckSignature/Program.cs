@@ -43,7 +43,7 @@ namespace CheckSignature
             {
                 var ext = Path.GetExtension(file).ToUpperInvariant();
 
-                if (ext != ".EXE" && ext != ".DLL" && ext != ".MSI" && ext != ".CAB")
+                if (ext != ".EXE" && ext != ".DLL" && ext != ".MSI" && ext != ".CAB" && ext != ".MSP")
                 {
                     continue;
                 }
