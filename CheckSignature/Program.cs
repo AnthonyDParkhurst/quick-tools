@@ -1,7 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 
 namespace CheckSignature
 {
@@ -52,7 +50,7 @@ namespace CheckSignature
 
                 if (!isTrusted)
                 {
-                    Console.WriteLine($"File: {file}");
+                    Console.WriteLine($"{file}");
                 }
             }
         }
@@ -65,7 +63,7 @@ namespace CheckSignature
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error {ex.Message}");
+                Console.Error.WriteLine($"Error {ex.Message}");
                 return false;
             }
         }
