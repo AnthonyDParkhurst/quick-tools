@@ -19,6 +19,6 @@ rem -- I use the settings below to get the files I usually want from KTA, TD and
 
 rem -- Of course you can have different versions of this bat file for different file sets you want from Panzura.
 
-dotnet PanzyCopy.dll --dest D:\Cached --get "Tungsten*.zip" --get "Tungsten*.iso" --get "Tungsten*.MD5" --get "Kofax*.zip" --get "Kofax*.iso" --get "Kofax*.MD5" --get DLInternal.zip --get RepositoryBrowser.ZIP --get TA_lib.ZIP --get Unobfuscated_ThinClient.zip --skip "TungstenTotalAgility*Azure*" --skip "TungstenTotalAgility*IS*" --skip "TungstenTotalAgility*OPMT*" --skip "TungstenTotalAgilityDocumentation*" --skip "KofaxTotalAgility*Azure*" --skip "KofaxTotalAgility*IS*" --skip "KofaxTotalAgility*OPMT*" --skip "KofaxTotalAgilityDocumentation*" %*
+dotnet PanzyCopy.dll --dest D:\Cached --get "Tungsten*.zip" --get "Tungsten*.iso" --get "Tungsten*.MD5" --get "Kofax*.zip" --get "Kofax*.iso" --get "Kofax*.MD5" --get DLInternal.zip --get RepositoryBrowser.ZIP --get TA_lib.ZIP --get Unobfuscated_ThinClient.zip --skip "TungstenTotalAgility*Azure*" --skip "TungstenTotalAgility*IS*" --skip "TungstenTotalAgility*OPMT*" --skip "TungstenTotalAgilityDocumentation*" --skip "KofaxTotalAgility*Azure*" --skip "KofaxTotalAgility*IS*" --skip "KofaxTotalAgility*OPMT*" --skip "KofaxTotalAgilityDocumentation*" --skip "TungstenTotalAgilityPackages*" %*
 
 pause
