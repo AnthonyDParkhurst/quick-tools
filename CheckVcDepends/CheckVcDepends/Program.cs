@@ -10,7 +10,7 @@ namespace CheckVcDepends
 {
     class Program
     {
-        private const string DumpBin = @"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.35.32215\bin\Hostx86\x86\dumpbin.exe";
+        private const string DumpBin = @"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.36.32532\bin\Hostx86\x86\dumpbin.exe";
 
         private const string IgnoreKey = "-ignore=";
         private const string OutKey = "-out=";
@@ -118,11 +118,11 @@ namespace CheckVcDepends
                     }
                 }
 
-                var vcRuntime = outlines.FirstOrDefault(l => l.StartsWith("msvc", true, CultureInfo.InvariantCulture));
+                var vcRuntime = outlines;//.FirstOrDefault(l => l.StartsWith("msvc", true, CultureInfo.InvariantCulture));
 
-                if (vcRuntime != null && !Ignores.Contains(vcRuntime, StringComparer.OrdinalIgnoreCase))
+                ////if (vcRuntime != null && !Ignores.Contains(vcRuntime, StringComparer.OrdinalIgnoreCase))
                 {
-                    Output.WriteLine($"{vcRuntime} used by {filePath}");
+                    Output.WriteLine($"{filePath}: {string.Join(";", vcRuntime)}");
                 }
 
                 process.WaitForExit();
